@@ -87,11 +87,9 @@ class FolderItem extends StatelessWidget {
             folder.description,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: TextStyle(color: Colors.grey[600], fontSize: 14),
           ),
-          trailing: isFavorites
-              ? const Icon(Icons.star, color: Colors.amber)
-              : const Icon(Icons.chevron_right),
+          trailing: const Icon(Icons.chevron_right),
           onTap: onTap,
         ),
       ),
