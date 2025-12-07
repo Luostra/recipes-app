@@ -4,6 +4,8 @@ import 'package:recipes_app/services/supabase_service.dart';
 import 'package:recipes_app/pages/folder_detail_page.dart';
 import 'package:recipes_app/pages/create_edit_folder_page.dart';
 import 'package:recipes_app/widgets/folder_item.dart';
+import 'package:recipes_app/widgets/app_drawer.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FoldersPage extends StatefulWidget {
   const FoldersPage({super.key});
@@ -98,19 +100,36 @@ class _FoldersPageState extends State<FoldersPage> {
     }
   }
 
+  String? _userEmail() {
+    final session = Supabase.instance.client.auth.currentSession;
+    final email = session?.user.email;
+    return email ?? 'Гость';
+  }
+
+  void _signOut() async {
+    await _supabaseService.signOut();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Мои папки'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await _supabaseService.signOut();
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
             },
           ),
-        ],
+        ),
+      ),
+      drawer: AppDrawer(
+        userEmail: _userEmail(),
+        onSignOut: _signOut,
+        title: 'RecipesApp',
+        subtitle: 'Ваша кулинарная книга',
+        icon: Icons.restaurant_menu,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
