@@ -17,6 +17,7 @@ class FoldersPage extends StatefulWidget {
 class _FoldersPageState extends State<FoldersPage> {
   final SupabaseService _supabaseService = SupabaseService();
   final List<Folder> _folders = [];
+  final List<Folder> _filteredFolders = [];
   final Folder _favoritesFolder = Folder(
     id: 'favorites',
     userId: '',
@@ -27,11 +28,43 @@ class _FoldersPageState extends State<FoldersPage> {
   );
 
   bool _isLoading = true;
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadFolders();
+
+    // Слушатель для поиска
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    _filterFolders(_searchController.text);
+  }
+
+  void _filterFolders(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredFolders.clear();
+        _filteredFolders.addAll(_folders);
+      } else {
+        _filteredFolders.clear();
+        _filteredFolders.addAll(
+          _folders.where((folder) {
+            return folder.title.toLowerCase().contains(query.toLowerCase()) ||
+                folder.description.toLowerCase().contains(query.toLowerCase());
+          }).toList(),
+        );
+      }
+    });
   }
 
   Future<void> _loadFolders() async {
@@ -40,7 +73,25 @@ class _FoldersPageState extends State<FoldersPage> {
     setState(() {
       _folders.clear();
       _folders.addAll(folders);
+      _filteredFolders.clear();
+      _filteredFolders.addAll(folders);
       _isLoading = false;
+    });
+  }
+
+  void _startSearch() {
+    setState(() {
+      _isSearching = true;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).requestFocus(FocusNode());
+    });
+  }
+
+  void _stopSearch() {
+    setState(() {
+      _isSearching = false;
+      _searchController.clear();
     });
   }
 
@@ -110,61 +161,166 @@ class _FoldersPageState extends State<FoldersPage> {
     await _supabaseService.signOut();
   }
 
+  List<Folder> _getDisplayFolders() {
+    return _searchController.text.isEmpty ? _folders : _filteredFolders;
+  }
+
+  bool _shouldShowFavorites() {
+    // Показываем папку "Избранное" только если не активен поиск
+    return !_isSearching && _searchController.text.isEmpty;
+  }
+
+  bool _hasSearchResults() {
+    return _getDisplayFolders().isNotEmpty;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final displayFolders = _getDisplayFolders();
+    final showFavorites = _shouldShowFavorites();
+    final hasResults = _hasSearchResults();
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Мои папки'),
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
-        ),
-      ),
-      drawer: AppDrawer(
-        userEmail: _userEmail(),
-        onSignOut: _signOut,
-        title: 'RecipesApp',
-        subtitle: 'Ваша кулинарная книга',
-        icon: Icons.restaurant_menu,
-      ),
+      appBar: _isSearching ? _buildSearchAppBar() : _buildNormalAppBar(),
+      drawer: _isSearching
+          ? null
+          : AppDrawer(
+              userEmail: _userEmail(),
+              onSignOut: _signOut,
+              title: 'RecipesApp',
+              subtitle: 'Ваша кулинарная книга',
+              icon: Icons.restaurant_menu,
+            ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadFolders,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _folders.length + 1,
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    return GestureDetector(
-                      onTap: () => _navigateToFolder(_favoritesFolder),
-                      child: FolderItem(
-                        folder: _favoritesFolder,
-                        onDelete: null,
-                        onEdit: null,
-                        isFavorites: true,
-                      ),
-                    );
-                  }
+              child: hasResults
+                  ? ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount:
+                          displayFolders.length + (showFavorites ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        // Если показываем папку "Избранное" и это первый элемент
+                        if (showFavorites && index == 0) {
+                          return GestureDetector(
+                            onTap: () => _navigateToFolder(_favoritesFolder),
+                            child: FolderItem(
+                              folder: _favoritesFolder,
+                              onDelete: null,
+                              onEdit: null,
+                              isFavorites: true,
+                            ),
+                          );
+                        }
 
-                  final folder = _folders[index - 1];
-                  return FolderItem(
-                    folder: folder,
-                    onDelete: () => _deleteFolder(folder),
-                    onEdit: () => _editFolder(folder),
-                    onTap: () => _navigateToFolder(folder),
-                  );
-                },
-              ),
+                        // Корректируем индекс для обычных папок
+                        final folderIndex = showFavorites ? index - 1 : index;
+                        final folder = displayFolders[folderIndex];
+                        return FolderItem(
+                          folder: folder,
+                          onDelete: () => _deleteFolder(folder),
+                          onEdit: () => _editFolder(folder),
+                          onTap: () => _navigateToFolder(folder),
+                        );
+                      },
+                    )
+                  : _buildNoResultsWidget(),
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _createNewFolder,
-        child: const Icon(Icons.add),
+      floatingActionButton: _isSearching
+          ? null
+          : FloatingActionButton(
+              onPressed: _createNewFolder,
+              child: const Icon(Icons.add),
+            ),
+    );
+  }
+
+  Widget _buildNoResultsWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.search_off, size: 80, color: Colors.grey),
+          const SizedBox(height: 20),
+          Text(
+            'Папки не найдены',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: Colors.grey[700],
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _searchController.text.isEmpty
+                ? 'У вас пока нет папок с рецептами'
+                : 'По запросу "${_searchController.text}" ничего не найдено',
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+          ),
+          const SizedBox(height: 20),
+        ],
       ),
+    );
+  }
+
+  AppBar _buildNormalAppBar() {
+    return AppBar(
+      title: const Text('Мои папки'),
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
+        ),
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.search),
+          onPressed: _startSearch,
+          tooltip: 'Поиск папок с рецептами',
+        ),
+      ],
+    );
+  }
+
+  AppBar _buildSearchAppBar() {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: _stopSearch,
+      ),
+      title: TextField(
+        controller: _searchController,
+        autofocus: true,
+        decoration: const InputDecoration(
+          hintText: 'Поиск папок с рецептами...',
+          hintStyle: TextStyle(color: Colors.white70),
+          // Убираем фон
+          filled: false,
+
+          // Полностью убираем все рамки
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          disabledBorder: InputBorder.none,
+          errorBorder: InputBorder.none,
+        ),
+        style: const TextStyle(color: Colors.white),
+        cursorColor: Colors.white,
+      ),
+      actions: [
+        if (_searchController.text.isNotEmpty)
+          IconButton(
+            icon: const Icon(Icons.clear),
+            onPressed: () {
+              _searchController.clear();
+            },
+          ),
+      ],
     );
   }
 }

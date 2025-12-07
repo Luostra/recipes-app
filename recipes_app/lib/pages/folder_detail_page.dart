@@ -18,12 +18,45 @@ class FolderDetailPage extends StatefulWidget {
 class _FolderDetailPageState extends State<FolderDetailPage> {
   final SupabaseService _supabaseService = SupabaseService();
   final List<Recipe> _recipes = [];
+  final List<Recipe> _filteredRecipes = [];
   bool _isLoading = true;
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadRecipes();
+
+    // Слушатель для поиска
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    _filterRecipes(_searchController.text);
+  }
+
+  void _filterRecipes(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredRecipes.clear();
+        _filteredRecipes.addAll(_recipes);
+      } else {
+        _filteredRecipes.clear();
+        _filteredRecipes.addAll(
+          _recipes.where((recipe) {
+            return recipe.title.toLowerCase().contains(query.toLowerCase()) ||
+                recipe.content.toLowerCase().contains(query.toLowerCase());
+          }).toList(),
+        );
+      }
+    });
   }
 
   Future<void> _loadRecipes() async {
@@ -39,7 +72,25 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
     setState(() {
       _recipes.clear();
       _recipes.addAll(recipes);
+      _filteredRecipes.clear();
+      _filteredRecipes.addAll(recipes);
       _isLoading = false;
+    });
+  }
+
+  void _startSearch() {
+    setState(() {
+      _isSearching = true;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).requestFocus(FocusNode());
+    });
+  }
+
+  void _stopSearch() {
+    setState(() {
+      _isSearching = false;
+      _searchController.clear();
     });
   }
 
@@ -106,33 +157,54 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
     await _loadRecipes();
   }
 
+  void _backToFolders() {
+    Navigator.pop(context);
+  }
+
+  List<Recipe> _getDisplayRecipes() {
+    return _searchController.text.isEmpty ? _recipes : _filteredRecipes;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final displayRecipes = _getDisplayRecipes();
+
     return Scaffold(
-      appBar: AppBar(title: Text(widget.folder.title)),
+      appBar: _isSearching ? _buildSearchAppBar() : _buildNormalAppBar(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadRecipes,
-              child: _recipes.isEmpty
+              child: displayRecipes.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            widget.folder.emoji,
-                            style: const TextStyle(fontSize: 64),
-                          ),
+                          if (_searchController.text.isEmpty)
+                            Text(
+                              widget.folder.emoji,
+                              style: const TextStyle(fontSize: 64),
+                            )
+                          else
+                            const Icon(
+                              Icons.search_off,
+                              size: 64,
+                              color: Colors.grey,
+                            ),
                           const SizedBox(height: 16),
                           Text(
-                            'В этой папке пока нет рецептов',
+                            _searchController.text.isEmpty
+                                ? 'В этой папке пока нет рецептов'
+                                : 'Рецепты не найдены',
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            widget.folder.id == 'favorites'
-                                ? 'Добавляйте рецепты в избранное, нажимая на звездочку'
-                                : 'Нажмите + чтобы добавить первый рецепт',
+                            _searchController.text.isEmpty
+                                ? widget.folder.id == 'favorites'
+                                      ? 'Добавляйте рецепты в избранное, нажимая на звездочку'
+                                      : 'Нажмите + чтобы добавить первый рецепт'
+                                : 'Попробуйте изменить запрос поиска',
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
@@ -141,9 +213,9 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.all(16),
-                      itemCount: _recipes.length,
+                      itemCount: displayRecipes.length,
                       itemBuilder: (context, index) {
-                        final recipe = _recipes[index];
+                        final recipe = displayRecipes[index];
                         return RecipeItem(
                           recipe: recipe,
                           onTap: () => _navigateToRecipe(recipe),
@@ -156,12 +228,66 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
                       },
                     ),
             ),
-      floatingActionButton: widget.folder.id == 'favorites'
+      floatingActionButton: (_isSearching || widget.folder.id == 'favorites')
           ? null
           : FloatingActionButton(
               onPressed: _createNewRecipe,
               child: const Icon(Icons.add),
             ),
+    );
+  }
+
+  AppBar _buildNormalAppBar() {
+    return AppBar(
+      title: Text(widget.folder.title),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: _backToFolders,
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.search),
+          onPressed: _startSearch,
+          tooltip: 'Поиск рецептов',
+        ),
+      ],
+    );
+  }
+
+  AppBar _buildSearchAppBar() {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: _stopSearch,
+      ),
+      title: TextField(
+        controller: _searchController,
+        autofocus: true,
+        decoration: const InputDecoration(
+          hintText: 'Поиск рецептов...',
+          hintStyle: TextStyle(color: Colors.white70),
+          // Убираем фон
+          filled: false,
+
+          // Полностью убираем все рамки
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          disabledBorder: InputBorder.none,
+          errorBorder: InputBorder.none,
+        ),
+        style: const TextStyle(color: Colors.white),
+        cursorColor: Colors.white,
+      ),
+      actions: [
+        if (_searchController.text.isNotEmpty)
+          IconButton(
+            icon: const Icon(Icons.clear),
+            onPressed: () {
+              _searchController.clear();
+            },
+          ),
+      ],
     );
   }
 }
