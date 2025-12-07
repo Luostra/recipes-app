@@ -77,6 +77,8 @@ class FolderItem extends StatelessWidget {
           leading: Text(folder.emoji, style: const TextStyle(fontSize: 32)),
           title: Text(
             folder.title,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w500),
