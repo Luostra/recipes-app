@@ -127,28 +127,16 @@ class _FoldersPageState extends State<FoldersPage> {
   }
 
   void _deleteFolder(Folder folder) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Удалить папку?'),
-        content: const Text('Все рецепты в этой папке также будут удалены.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Отмена'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Удалить', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
+    // Подтверждение уже обрабатывается в FolderItem.confirmDismiss при свайпе,
+    // поэтому здесь просто удаляем и показываем SnackBar.
+    await _supabaseService.deleteFolder(folder.id);
 
-    if (confirmed == true) {
-      await _supabaseService.deleteFolder(folder.id);
-      await _loadFolders();
-    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Папка удалена')));
+
+    await _loadFolders();
   }
 
   String? _userEmail() {

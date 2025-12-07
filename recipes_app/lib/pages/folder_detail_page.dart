@@ -128,28 +128,17 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
   }
 
   void _deleteRecipe(Recipe recipe) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Удалить рецепт?'),
-        content: const Text('Это действие нельзя отменить.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Отмена'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Удалить', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
+    // Удаляем рецепт (подтверждение уже показывается в Dismissible.confirmDismiss)
+    await _supabaseService.deleteRecipe(recipe.id);
 
-    if (confirmed == true) {
-      await _supabaseService.deleteRecipe(recipe.id);
-      await _loadRecipes();
-    }
+    // Показать одно уведомление о результате
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Рецепт удалён')));
+
+    // Обновить список
+    await _loadRecipes();
   }
 
   Future<void> _toggleFavorite(Recipe recipe) async {
