@@ -164,7 +164,7 @@ class _CreateEditRecipePageState extends State<CreateEditRecipePage> {
         ),
         actions: [
           if (!_isLoading)
-            IconButton(onPressed: _saveRecipe, icon: const Icon(Icons.save)),
+            IconButton(onPressed: _saveRecipe, icon: const Icon(Icons.check)),
         ],
       ),
       body: _isLoading
@@ -181,7 +181,7 @@ class _CreateEditRecipePageState extends State<CreateEditRecipePage> {
                         children: [
                           Container(
                             width: double.infinity,
-                            height: 200,
+                            height: 400,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
                               color: Colors.grey[200],
@@ -271,7 +271,7 @@ class _CreateEditRecipePageState extends State<CreateEditRecipePage> {
                         border: OutlineInputBorder(),
                         alignLabelWithHint: true,
                       ),
-                      maxLines: 10,
+                      maxLines: 15,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Введите рецепт';

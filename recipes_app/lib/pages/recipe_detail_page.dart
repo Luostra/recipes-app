@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:recipes_app/models/recipe.dart';
 import 'package:recipes_app/services/supabase_service.dart';
-import 'package:recipes_app/pages/create_edit_recipe_page.dart';
+//import 'package:recipes_app/pages/create_edit_recipe_page.dart';
 
 class RecipeDetailPage extends StatefulWidget {
   final Recipe recipe;
@@ -35,6 +35,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     }
   }
 
+  /*
   void _editRecipe() async {
     final result = await Navigator.push(
       context,
@@ -47,21 +48,16 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
       Navigator.pop(context, true);
     }
   }
-
+*/
   @override
   Widget build(BuildContext context) {
     final hasImage = widget.recipe.imagePath.isNotEmpty;
 
     return Scaffold(
       extendBodyBehindAppBar: hasImage,
-      appBar: AppBar(
-        backgroundColor: hasImage ? Colors.transparent : null,
-        elevation: hasImage ? 0 : null,
-        foregroundColor: hasImage ? Colors.white : null,
-        actions: [
-          IconButton(onPressed: _editRecipe, icon: const Icon(Icons.edit)),
-        ],
-      ),
+      appBar: hasImage
+          ? null // Убираем основной AppBar когда есть изображение
+          : AppBar(title: Text(widget.recipe.title)),
       body: hasImage ? _buildWithImageLayout() : _buildWithoutImageLayout(),
     );
   }
@@ -70,13 +66,19 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
     return CustomScrollView(
       slivers: [
         SliverAppBar(
-          expandedHeight: 300,
+          expandedHeight: 400,
           backgroundColor: Colors.transparent,
-          flexibleSpace: _isLoadingImage
-              ? const Center(child: CircularProgressIndicator())
-              : _imageUrl != null
-              ? Image.network(_imageUrl!, fit: BoxFit.cover)
-              : Container(color: Colors.grey[200]),
+          floating: false,
+          pinned: true,
+          snap: false,
+          stretch: true,
+          flexibleSpace: FlexibleSpaceBar(
+            background: _isLoadingImage
+                ? const Center(child: CircularProgressIndicator())
+                : _imageUrl != null
+                ? Image.network(_imageUrl!, fit: BoxFit.cover)
+                : Container(color: Colors.grey[200]),
+          ),
         ),
         SliverPadding(
           padding: const EdgeInsets.all(16),
