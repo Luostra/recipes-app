@@ -115,7 +115,11 @@ class _LoginPageState extends State<LoginPage> {
             keyboardType: TextInputType.emailAddress,
             decoration: InputDecoration(
               labelText: 'Email',
-              prefixIcon: const Icon(Icons.email_outlined),
+              labelStyle: TextStyle(color: Colors.grey[700]),
+              prefixIcon: const Icon(
+                Icons.email_outlined,
+                color: Color.fromARGB(255, 97, 97, 97),
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -141,10 +145,15 @@ class _LoginPageState extends State<LoginPage> {
             obscureText: _obscurePassword,
             decoration: InputDecoration(
               labelText: 'Пароль',
-              prefixIcon: const Icon(Icons.lock_outline),
+              labelStyle: TextStyle(color: Colors.grey[700]),
+              prefixIcon: const Icon(
+                Icons.lock_outline,
+                color: Color.fromARGB(255, 97, 97, 97),
+              ),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                  color: Color.fromARGB(255, 97, 97, 97),
                 ),
                 onPressed: _togglePasswordVisibility,
               ),
@@ -168,6 +177,7 @@ class _LoginPageState extends State<LoginPage> {
           const SizedBox(height: 8),
 
           // Забыли пароль
+          /*
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
@@ -185,7 +195,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-
+          */
           // Сообщение об ошибке
           if (_errorText != null)
             Container(
@@ -265,7 +275,7 @@ class _LoginPageState extends State<LoginPage> {
               TextButton(
                 onPressed: widget.onSwitchToRegister,
                 child: const Text(
-                  'Зарегистрируйтесь',
+                  'Зарегистрироваться',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),

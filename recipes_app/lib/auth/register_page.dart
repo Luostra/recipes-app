@@ -21,7 +21,7 @@ class _RegisterPageState extends State<RegisterPage> {
   String? _errorText;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _agreeToTerms = false;
+  //bool _agreeToTerms = false;
 
   void _updateState({bool? loading, String? error}) {
     if (!mounted) return;
@@ -33,39 +33,40 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Future<void> _signUpUser() async {
     if (!_formKey.currentState!.validate()) return;
+
+    /*
     if (!_agreeToTerms) {
       _updateState(error: 'Необходимо принять условия использования');
       return;
+    
     }
-
+    */
     _updateState(loading: true, error: null);
 
     try {
       final userEmail = _emailController.text.trim();
       final userPassword = _passwordController.text.trim();
 
-      final registrationResponse = await supabaseClient.auth.signUp(
+      final res = await supabaseClient.auth.signUp(
         email: userEmail,
         password: userPassword,
       );
 
-      if (registrationResponse.user != null) {
-        // Показываем сообщение об успешной регистрации
+      // В новых версиях SDK может возвращаться объект с error или throw AuthException
+      if (res.user != null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                'Регистрация успешна! Проверьте вашу почту для подтверждения.',
-              ),
+            const SnackBar(
+              content: Text('Регистрация успешна! Проверьте вашу почту.'),
               backgroundColor: Colors.green,
             ),
           );
-
-          // Переключаемся на страницу входа
           widget.onSwitchToLogin();
         }
       } else {
-        _updateState(error: 'Ошибка регистрации');
+        // Если user == null, попробуем прочитать сообщение об ошибке
+        final errMsg = 'Ошибка регистрации';
+        _updateState(error: _getAuthErrorMessage(errMsg));
       }
     } on AuthException catch (e) {
       _updateState(error: _getAuthErrorMessage(e.message));
@@ -77,13 +78,13 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   String _getAuthErrorMessage(String message) {
-    if (message.contains('User already registered')) {
+    if (message.toLowerCase().contains('registered')) {
       return 'Пользователь с таким email уже зарегистрирован';
-    } else if (message.contains('Password should be at least')) {
+    } else if (message.toLowerCase().contains('password should be at least')) {
       return 'Пароль должен быть не менее 6 символов';
-    } else if (message.contains('Invalid email')) {
+    } else if (message.toLowerCase().contains('invalid format')) {
       return 'Неверный формат email';
-    } else if (message.contains('Email rate limit exceeded')) {
+    } else if (message.toLowerCase().contains('email rate limit exceeded')) {
       return 'Слишком много попыток. Попробуйте позже';
     }
     return message;
@@ -144,7 +145,11 @@ class _RegisterPageState extends State<RegisterPage> {
             keyboardType: TextInputType.emailAddress,
             decoration: InputDecoration(
               labelText: 'Email',
-              prefixIcon: const Icon(Icons.email_outlined),
+              labelStyle: TextStyle(color: Colors.grey[700]),
+              prefixIcon: const Icon(
+                Icons.email_outlined,
+                color: Color.fromARGB(255, 97, 97, 97),
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -170,10 +175,15 @@ class _RegisterPageState extends State<RegisterPage> {
             obscureText: _obscurePassword,
             decoration: InputDecoration(
               labelText: 'Пароль',
-              prefixIcon: const Icon(Icons.lock_outline),
+              labelStyle: TextStyle(color: Colors.grey[700]),
+              prefixIcon: const Icon(
+                Icons.lock_outline,
+                color: Color.fromARGB(255, 97, 97, 97),
+              ),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                  color: Color.fromARGB(255, 97, 97, 97),
                 ),
                 onPressed: _togglePasswordVisibility,
               ),
@@ -190,6 +200,18 @@ class _RegisterPageState extends State<RegisterPage> {
               if (value.length < 6) {
                 return 'Пароль должен быть не менее 6 символов';
               }
+              if (value.contains(' ')) {
+                return 'Пароль не должен содержать пробелы';
+              }
+              if (!value.contains(RegExp(r'[0-9]'))) {
+                return 'Пароль должен содержать хотя бы одну цифру';
+              }
+              if (!value.contains(RegExp(r'[A-Z]'))) {
+                return 'В пароле отсутствует заглавная буква';
+              }
+              if (!value.contains(RegExp(r'[a-z]'))) {
+                return 'В пароле отсутствует строчная буква';
+              }
               return null;
             },
           ),
@@ -202,12 +224,17 @@ class _RegisterPageState extends State<RegisterPage> {
             obscureText: _obscureConfirmPassword,
             decoration: InputDecoration(
               labelText: 'Подтвердите пароль',
-              prefixIcon: const Icon(Icons.lock_outline),
+              labelStyle: TextStyle(color: Colors.grey[700]),
+              prefixIcon: const Icon(
+                Icons.lock_outline,
+                color: Color.fromARGB(255, 97, 97, 97),
+              ),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscureConfirmPassword
                       ? Icons.visibility
                       : Icons.visibility_off,
+                  color: Color.fromARGB(255, 97, 97, 97),
                 ),
                 onPressed: _toggleConfirmPasswordVisibility,
               ),
@@ -229,7 +256,7 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
 
           const SizedBox(height: 16),
-
+          /*
           // Соглашение с условиями
           Row(
             children: [
@@ -286,7 +313,7 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ],
           ),
-
+          */
           // Сообщение об ошибке
           if (_errorText != null)
             Container(
