@@ -203,16 +203,20 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
                   : ListView.builder(
                       padding: const EdgeInsets.all(16),
                       itemCount: displayRecipes.length,
+                      // В методе build, в ListView.builder:
                       itemBuilder: (context, index) {
                         final recipe = displayRecipes[index];
                         return RecipeItem(
                           recipe: recipe,
                           onTap: () => _navigateToRecipe(recipe),
                           onDelete: widget.folder.id == 'favorites'
-                              ? null
+                              ? null // В папке "Избранное" не удаляем рецепты
                               : () => _deleteRecipe(recipe),
                           onEdit: () => _editRecipe(recipe),
                           onToggleFavorite: () => _toggleFavorite(recipe),
+                          isInFavoritesFolder:
+                              widget.folder.id ==
+                              'favorites', // Передаем true для папки "Избранное"
                         );
                       },
                     ),

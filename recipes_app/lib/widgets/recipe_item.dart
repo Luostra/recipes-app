@@ -9,6 +9,7 @@ class RecipeItem extends StatefulWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onEdit;
   final VoidCallback onToggleFavorite;
+  final bool isInFavoritesFolder; // Новый параметр
 
   const RecipeItem({
     super.key,
@@ -17,6 +18,7 @@ class RecipeItem extends StatefulWidget {
     this.onDelete,
     this.onEdit,
     required this.onToggleFavorite,
+    this.isInFavoritesFolder = false, // По умолчанию false
   });
 
   @override
@@ -55,6 +57,41 @@ class _RecipeItemState extends State<RecipeItem> {
 
   @override
   Widget build(BuildContext context) {
+    final content = Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: _buildLeading(),
+        title: Text(
+          widget.recipe.title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w500),
+        ),
+        subtitle: Text(
+          widget.recipe.content.length > 100
+              ? '${widget.recipe.content.substring(0, 100)}...'
+              : widget.recipe.content,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        trailing: IconButton(
+          icon: Icon(
+            widget.recipe.isFavour ? Icons.star : Icons.star_border,
+            color: widget.recipe.isFavour ? Colors.amber : Colors.grey,
+          ),
+          onPressed: widget.onToggleFavorite,
+        ),
+        onTap: widget.onTap,
+      ),
+    );
+
+    // Если рецепт в папке "Избранное", не используем Dismissible
+    if (widget.isInFavoritesFolder) {
+      return content;
+    }
+
+    // Для обычных папок используем Dismissible
     return Dismissible(
       key: Key(widget.recipe.id),
       direction: DismissDirection.horizontal,
@@ -103,34 +140,7 @@ class _RecipeItemState extends State<RecipeItem> {
           widget.onEdit?.call();
         }
       },
-      child: Card(
-        margin: const EdgeInsets.only(bottom: 8),
-        child: ListTile(
-          leading: _buildLeading(),
-          title: Text(
-            widget.recipe.title,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w500),
-          ),
-          subtitle: Text(
-            widget.recipe.content.length > 100
-                ? '${widget.recipe.content.substring(0, 100)}...'
-                : widget.recipe.content,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          trailing: IconButton(
-            icon: Icon(
-              widget.recipe.isFavour ? Icons.star : Icons.star_border,
-              color: widget.recipe.isFavour ? Colors.amber : Colors.grey,
-            ),
-            onPressed: widget.onToggleFavorite,
-          ),
-          onTap: widget.onTap,
-        ),
-      ),
+      child: content,
     );
   }
 
