@@ -204,7 +204,7 @@
 
 ---
 
-## **11. Диаграмма Uses Cases**
+## **11. Диаграмма Use Cases**
 
 <img width="1539" height="1079" alt="image" src="https://github.com/user-attachments/assets/838b1615-4279-40d6-80ba-eda1f34d04e5" />
 
@@ -215,17 +215,11 @@
 
 ### **Frontend**
 
-* Flutter (Dart)
-* ImagePicker + ImageCropper
-* Material Design компоненты
-* EmojiPicker
+Flutter (Dart) + пакеты SupabaseFlutter, ImagePicker, ImageCropper, EmojiPicker и др.
 
 ### **Backend**
 
-* Supabase (Postgres)
-* Supabase Auth
-* Supabase Storage
-* RLS
+Supabase (Postgres) + Supabase Auth + Supabase Storage + RLS
 
 ### **Платформы**
 
