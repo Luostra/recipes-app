@@ -66,6 +66,8 @@ class _RecipeItemState extends State<RecipeItem> {
           style: Theme.of(
             context,
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w500),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
           widget.recipe.content.length > 100
