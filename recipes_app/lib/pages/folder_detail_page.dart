@@ -115,16 +115,17 @@ class _FolderDetailPageState extends State<FolderDetailPage> {
   }
 
   void _editRecipe(Recipe recipe) async {
-    final result = await Navigator.push(
+    //final result =
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CreateEditRecipePage(recipe: recipe),
       ),
     );
 
-    if (result == true) {
-      await _loadRecipes();
-    }
+    //if (result == true) {
+    await _loadRecipes();
+    //}
   }
 
   void _deleteRecipe(Recipe recipe) async {

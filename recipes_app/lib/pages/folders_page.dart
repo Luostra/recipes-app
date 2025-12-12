@@ -114,16 +114,17 @@ class _FoldersPageState extends State<FoldersPage> {
   }
 
   void _editFolder(Folder folder) async {
-    final result = await Navigator.push(
+    //final result =
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CreateEditFolderPage(folder: folder),
       ),
     );
 
-    if (result == true) {
-      await _loadFolders();
-    }
+    //if (result == true) {
+    await _loadFolders();
+    //}
   }
 
   void _deleteFolder(Folder folder) async {
