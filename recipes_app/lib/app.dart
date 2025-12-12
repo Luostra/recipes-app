@@ -27,6 +27,7 @@ class RecipesApp extends StatelessWidget {
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
           backgroundColor: Color(0xFF2196F3),
           foregroundColor: Colors.white,
+          shape: CircleBorder(),
         ),
         inputDecorationTheme: InputDecorationTheme(
           border: OutlineInputBorder(
