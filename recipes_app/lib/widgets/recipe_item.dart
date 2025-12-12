@@ -73,7 +73,7 @@ class _RecipeItemState extends State<RecipeItem> {
               : widget.recipe.content,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.bodyMedium,
+          style: TextStyle(color: Colors.grey[600], fontSize: 14),
         ),
         trailing: IconButton(
           icon: Icon(
