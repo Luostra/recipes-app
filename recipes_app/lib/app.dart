@@ -9,6 +9,7 @@ class RecipesApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Recipes App',
       theme: ThemeData(
         primaryColor: const Color(0xFF2196F3),
