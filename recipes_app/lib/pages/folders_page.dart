@@ -257,7 +257,7 @@ class _FoldersPageState extends State<FoldersPage> {
 
   AppBar _buildNormalAppBar() {
     return AppBar(
-      title: const Text('Мои папки'),
+      title: const Text('Все папки'),
       leading: Builder(
         builder: (context) => IconButton(
           icon: const Icon(Icons.menu),
