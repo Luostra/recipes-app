@@ -16,7 +16,7 @@ class RecipesApp extends StatelessWidget {
         colorScheme: const ColorScheme.light(
           primary: Color(0xFF2196F3),
           secondary: Color(0xFF03A9F4),
-          background: Colors.white,
+          surface: Colors.white,
           onPrimary: Colors.white,
         ),
         appBarTheme: const AppBarTheme(
