@@ -1,0 +1,5 @@
+-keep class com.yalantis.ucrop.** { *; }
+-dontwarn com.yalantis.ucrop.**
+
+-keep class okhttp3.** { *; }
+-dontwarn okhttp3.**
